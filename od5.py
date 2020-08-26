@@ -2,11 +2,11 @@ from odlib import *
 import numpy as np
 from math import sin, cos, sqrt, asin, acos
 
-# Math constants
+# MATH CONSTANTS
 k = 0.01720209847
 c = 173.145
 
-# AIJ data
+# AIJ DATA
 RA = [RAdecimalToHMS(17.633096*15), RAdecimalToHMS(17.642617*15),
       RAdecimalToHMS(17.661737*15)]
 DEC = [DECdecimalToDMS(-24.906182), DECdecimalToDMS(-22.779707),
@@ -14,16 +14,15 @@ DEC = [DECdecimalToDMS(-24.906182), DECdecimalToDMS(-22.779707),
 t1 = 2458671.778
 t2 = 2458679.772
 t3 = 2458683.774
-
 R = [[-2.568180989317604E-01,  9.026400560686667E-01,  3.912553385188193E-01],
        [-3.849247965056879E-01, 8.631971645323986E-01, 3.741557451122443E-01],
       [-4.465913217555757E-01, 8.375970194890799E-01,  3.630559556728792E-01]] #in equatorial coordinates REAL
 
-# a, e, i, big om, w, M
+# EXPECTED VALUES OF a, e, i, big om, w, M
 expected_elements = [2.640226301080940 , 4.059008132819690E-01, 9.527069429767748,
                      2.809685769461632E+02 , 3.567195418376240E+02, 1.777935844299149]
 
-# Convert data to radians
+# Convert RA and DEC coordinates to radians
 RA_rad = [HMStoDeg(x[0], x[1], x[2]) * pi/180 for x in RA]
 DEC_rad = [DMStoDeg(x[0], x[1], x[2]) * pi/180 for x in DEC]
 
@@ -44,11 +43,13 @@ a1 = tau3/tau0
 a3 = -tau1/tau0
 count = 0
 
+# Set starting values for approximation
 r2 = [3]
 r2dot = [3]
 r2o = [0]
 r2doto = [0]
 
+# f series function
 def f(tau):
     series_pt1 = 1-(tau**2)/(2*mag(r2)**3) + \
                  (tau**3)*dot(r2, r2dot)/(2*mag(r2)**5)
@@ -56,15 +57,18 @@ def f(tau):
     disgusting = 3*(dot(r2dot, r2dot)/(mag(r2)**2) - 1/(mag(r2)**3)) - \
                  15*(dot(r2, r2dot)/(mag(r2)**2))**2 + 1/(mag(r2)**3)
     return series_pt1 + coeff*disgusting
+# g series function
 def g(tau):
     return tau - (tau**3)/(6*(mag(r2)**3)) + (tau**4)*(dot(r2, r2dot))/(4*mag(r2)**5)
 
+# Determine if two vectors are similar enough to be considered equivalent
 def determineClose(v1, v2):
     for i in range(len(v1)):
         if(abs(v1[i]-v2[i]) > 10**-11):
             return False
     return True
 
+# Method of Gauss algorithm to approximate r2 and r2dot
 while(determineClose(r2, r2o) == False and determineClose(r2dot, r2doto) == False and count < 10000):
     D0 = dot(rho_hat[0], cross(rho_hat[1], rho_hat[2]))
     D = np.ones((3,3))
@@ -111,13 +115,11 @@ while(determineClose(r2, r2o) == False and determineClose(r2dot, r2doto) == Fals
     r2dot = b1*rvec[0] + b3*rvec[2]
     count += 1
 
+# Convert r2 vectors to the ecliptic plane
 r2 = rotate_x(r2, 23.4367505323)
 r2dot = rotate_x(r2dot, 23.4367505323)
 
-print("start")
-print(r2)
-print(r2dot)
-print("end")
+# Calculate orbital elements based on r2
 def calc_orbital_elements(r, rdot):
     vsquared = dot(rdot, rdot)
     h = cross(r, rdot)
@@ -155,7 +157,7 @@ def calc_orbital_elements(r, rdot):
 
     return [a, ec, i*180/pi, l_omega*180/pi, p_omega*180/pi, M*180/pi]
 
-
+# Format output of orbital elements
 def format(expected, actual, errors):
     print("Semimajor axis (a):")
     print("Expected value:", expected[0], "Calculated value:", actual[0], \
@@ -180,6 +182,7 @@ def format(expected, actual, errors):
     print("Mean anomaly (M):")
     print("Expected value:", expected[5], "Calculated value:", actual[5], \
           "Percent error:", errors[5]*100,"%")
+
 
 def main(r, rdot, expected):
     elements = calc_orbital_elements(r, rdot)
