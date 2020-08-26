@@ -2,9 +2,15 @@ from odlib import *
 import numpy as np
 from math import sin, cos, sqrt, asin, acos
 
+'''
+Calculate the orbital elements of any object rotating around the Sun, given its right ascension and 
+declination on three separate days (time in Julian days) and the equatorial Earth-Sun vectors on those days (in AU)
+'''
+
 # MATH CONSTANTS
 k = 0.01720209847
 c = 173.145
+
 
 # AIJ DATA
 RA = [RAdecimalToHMS(17.633096*15), RAdecimalToHMS(17.642617*15),
@@ -17,14 +23,14 @@ t3 = 2458683.774
 R = [[-2.568180989317604E-01,  9.026400560686667E-01,  3.912553385188193E-01],
        [-3.849247965056879E-01, 8.631971645323986E-01, 3.741557451122443E-01],
       [-4.465913217555757E-01, 8.375970194890799E-01,  3.630559556728792E-01]] #in equatorial coordinates REAL
-
-# EXPECTED VALUES OF a, e, i, big om, w, M
 expected_elements = [2.640226301080940 , 4.059008132819690E-01, 9.527069429767748,
-                     2.809685769461632E+02 , 3.567195418376240E+02, 1.777935844299149]
+                     2.809685769461632E+02 , 3.567195418376240E+02, 1.777935844299149] # EXPECTED VALUES OF a, e, i, big om, w, M
+
 
 # Convert RA and DEC coordinates to radians
 RA_rad = [HMStoDeg(x[0], x[1], x[2]) * pi/180 for x in RA]
 DEC_rad = [DMStoDeg(x[0], x[1], x[2]) * pi/180 for x in DEC]
+
 
 # Calculate rho hat from RA and DEC values
 rho_x = [cos(RA_rad[x])*cos(DEC_rad[x]) for x in range(len(RA_rad))]
@@ -33,21 +39,25 @@ rho_z = [sin(DEC_rad[x]) for x in range(len(RA_rad))]
 rho_hat_calc = [[rho_x[x], rho_y[x], rho_z[x]] for x in range(len(RA))]
 rho_hat = np.array(rho_hat_calc)
 
+
 # Adjust for time difference w/ taus
 tau1 = k*(t1-t2)
 tau3 = k*(t3-t2)
 tau0 = tau3 - tau1
+
 
 # Approximate a1 and a3
 a1 = tau3/tau0
 a3 = -tau1/tau0
 count = 0
 
+
 # Set starting values for approximation
 r2 = [3]
 r2dot = [3]
 r2o = [0]
 r2doto = [0]
+
 
 # f series function
 def f(tau):
@@ -57,9 +67,11 @@ def f(tau):
     disgusting = 3*(dot(r2dot, r2dot)/(mag(r2)**2) - 1/(mag(r2)**3)) - \
                  15*(dot(r2, r2dot)/(mag(r2)**2))**2 + 1/(mag(r2)**3)
     return series_pt1 + coeff*disgusting
+
 # g series function
 def g(tau):
     return tau - (tau**3)/(6*(mag(r2)**3)) + (tau**4)*(dot(r2, r2dot))/(4*mag(r2)**5)
+
 
 # Determine if two vectors are similar enough to be considered equivalent
 def determineClose(v1, v2):
@@ -67,6 +79,7 @@ def determineClose(v1, v2):
         if(abs(v1[i]-v2[i]) > 10**-11):
             return False
     return True
+
 
 # Method of Gauss algorithm to approximate r2 and r2dot
 while(determineClose(r2, r2o) == False and determineClose(r2dot, r2doto) == False and count < 10000):
@@ -115,9 +128,11 @@ while(determineClose(r2, r2o) == False and determineClose(r2dot, r2doto) == Fals
     r2dot = b1*rvec[0] + b3*rvec[2]
     count += 1
 
+      
 # Convert r2 vectors to the ecliptic plane
 r2 = rotate_x(r2, 23.4367505323)
 r2dot = rotate_x(r2dot, 23.4367505323)
+
 
 # Calculate orbital elements based on r2
 def calc_orbital_elements(r, rdot):
@@ -157,6 +172,7 @@ def calc_orbital_elements(r, rdot):
 
     return [a, ec, i*180/pi, l_omega*180/pi, p_omega*180/pi, M*180/pi]
 
+
 # Format output of orbital elements
 def format(expected, actual, errors):
     print("Semimajor axis (a):")
@@ -188,5 +204,6 @@ def main(r, rdot, expected):
     elements = calc_orbital_elements(r, rdot)
     errors = calc_percent_error(expected, elements)
     format(expected, elements, errors)
+
 
 main(r2, r2dot, expected_elements)
