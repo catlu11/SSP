@@ -14,31 +14,31 @@ earth_times = np.arange(2458683.774, 2459300.774, 1)
 ast_times = np.arange(2458683.774, 2460400.774, 1)
 mars_times = np.arange(2458683.774, 2460000.774, 1)
 
-# Plot earth (ecliptic coordinates)
-earth_elements = [1.00000011, 0.01671022, 0.00005, -11.26064, 102.94719, 189.5127]
+# Plot earth's orbit
+earth_elements = [1.00000011, 0.01671022, 0.00005, -11.26064, 102.94719, 189.5127] # earth's orbital elements
 e = []
 for t in earth_times:
-    e.append(generate_coords(earth_elements, t))
+    e.append(generate_coords(earth_elements, t)) # ecliptic coordinates
 e_x = [x[0] for x in e]
 e_y = [x[1] for x in e]
 e_z = [x[2] for x in e]
 ax.scatter3D(e_x, e_y, e_z, s=1, c='g')
 
-# Plot asteroid (ecliptic coordinates)
-ast_elements = [2.64472, 0.40668, 9.53748, 280.97715, 356.76770, 1.74872]
+# Plot asteroid 99795's orbit 
+ast_elements = [2.64472, 0.40668, 9.53748, 280.97715, 356.76770, 1.74872] # asteroid's orbital elements
 a = []
 for t in ast_times:
-    a.append(generate_coords(ast_elements, t))
+    a.append(generate_coords(ast_elements, t)) # ecliptic coordinates
 a_x = [x[0] for x in a]
 a_y = [x[1] for x in a]
 a_z = [x[2] for x in a]
 ax.scatter3D(a_x, a_y, a_z, s=15, c='b')
 
-# Plot Mars (ecliptic coordinates)
-mars_elements = [1.524, 0.0934, 1.85061, 49.57854, 336.04084, 158.100]
+# Plot Mars' orbit
+mars_elements = [1.524, 0.0934, 1.85061, 49.57854, 336.04084, 158.100] # Mars's orbital elements
 m = []
 for t in mars_times:
-    m.append(generate_coords(mars_elements, t))
+    m.append(generate_coords(mars_elements, t)) # ecliptic coordinates
 m_x = [x[0] for x in m]
 m_y = [x[1] for x in m]
 m_z = [x[2] for x in m]
